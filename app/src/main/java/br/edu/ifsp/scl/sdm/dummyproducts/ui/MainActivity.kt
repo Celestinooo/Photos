@@ -15,6 +15,7 @@ import br.edu.ifsp.scl.sdm.dummyproducts.ui.model.Photo
 import com.android.volley.toolbox.ImageRequest
 
 class MainActivity : AppCompatActivity() {
+
     private val amb: ActivityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
@@ -23,6 +24,8 @@ class MainActivity : AppCompatActivity() {
     private val photoAdapter: PhotoAdapter by lazy {
         PhotoAdapter(this, photoList)
     }
+
+    private var mockCounter = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,13 +36,10 @@ class MainActivity : AppCompatActivity() {
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
                     val photo = photoList[p2]
-                    retrieveUrl(photo)
-                    retrieveThumbnail(photo)
+                    retrieveImages(photo)
                 }
-
                 override fun onNothingSelected(p0: AdapterView<*>?) {
                 }
-
             }
         }
 
@@ -60,17 +60,38 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-    private fun retrieveUrl(photo: Photo) {
-        ImageRequest(photo.url, { response ->
-            amb.imgUrl.setImageBitmap(response)
+    private fun retrieveImages(photo: Photo) {
+        //testMocked()
+        loadImageFromUrl(photo.url, amb.imgUrl)
+        loadImageFromUrl(photo.thumbnailUrl, amb.imgThumb)
+    }
+
+    private fun loadImageFromUrl(url: String, imageView: ImageView) {
+        ImageRequest(url, { response ->
+            imageView.setImageBitmap(response)
         }, 0, 0, ImageView.ScaleType.CENTER, Bitmap.Config.ARGB_8888, {
-            Toast.makeText(this, getString(R.string.request_problem),Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.request_problem), Toast.LENGTH_SHORT).show()
         }).also {
             JSONPlaceholderAPI.getInstance(this).addToRequestQueue(it)
         }
     }
 
-    private fun retrieveThumbnail(photo: Photo) {
-
+    /**
+     * URLs de imagem da API utilizada geram erro no request, portanto essa função foi usada para testar requests e troca das imagens.
+     */
+    private fun testMocked() {
+        val mockUrl : String
+        val mockThumb : String
+        if(mockCounter == 0) {
+            mockUrl = "https://fastly.picsum.photos/id/880/200/200.jpg?hmac=g5VV-eqqKk9TdTvkzKu6PzjRtzrqVhrj6v7H9ZT7PDo"
+            mockThumb = "https://fastly.picsum.photos/id/1082/200/300.jpg?hmac=AaFCHuEst4e0Oy553UCibOtysEKByBAl3XsTR8n4e1c"
+            mockCounter++
+        } else {
+            mockUrl = "https://fastly.picsum.photos/id/107/200/300.jpg?hmac=vq69VuAP_HhH4bpPD0bOs_QN_b-223QZ6RKKdu-Vv_I"
+            mockThumb = "https://fastly.picsum.photos/id/693/200/200.jpg?hmac=7KcC6ytdAPoUzLmXyr1r5hDXHyYQL-W1P40rRURkouE"
+            mockCounter--
+        }
+        loadImageFromUrl(mockUrl, amb.imgUrl)
+        loadImageFromUrl(mockThumb, amb.imgThumb)
     }
 }
